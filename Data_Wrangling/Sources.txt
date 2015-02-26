@@ -1,0 +1,11 @@
+Sources Used:
+
+Etree Documentation:
+https://docs.python.org/2/library/xml.etree.elementtree.html
+http://effbot.org/zone/element-index.htm
+
+MongoDB Documentation:
+http://docs.mongodb.org/manual/
+
+Sample Project:
+https://docs.google.com/document/d/1F0Vs14oNEs2idFJR3C_OPxwS6L0HPliOii-QpbmrMo4/pub
