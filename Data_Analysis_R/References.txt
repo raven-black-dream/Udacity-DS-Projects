@@ -3,3 +3,5 @@ References:
 http://www.stat.berkeley.edu/~s133/dates.html
 http://stackoverflow.com/questions/7201341/how-can-2-strings-be-concatenated-in-r
 http://docs.ggplot2.org/current/
+
+Also the Global Terrorism Database Codebook (attached)
