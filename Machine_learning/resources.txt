@@ -1,0 +1,6 @@
+Resources used:
+
+I drew the structure of my report from the example report given at the below link
+https://www.udacity.com/wiki/ud120/finalproject
+
+Other than that I made extensive use of  the sklearn documentation.
