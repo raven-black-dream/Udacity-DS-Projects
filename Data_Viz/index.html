@@ -4,7 +4,7 @@
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
-/*<script src="//d3js.org/topojson.v1.min.js"></script>*/	
+
 <style>
 h2 {
 	text-align: center;
@@ -14,10 +14,11 @@ h2 {
 	fill: none;
 	pointer-events: all;
 
-.path {
+path {
 	stroke: #000000;
 	fill: #d3d3d3;
 }
+
 </style>
 
 <script type="text/javascript"> 
@@ -31,6 +32,8 @@ function draw_map(world){
 	var tip = d3.tip()
 	.attr('class', 'd3-tip')
 	.offset([-10,0])
+	.style("line-height", 1)
+	.style("background", "rgba(236, 232, 197, 0.5)")
 	.html(function(d){
 		return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
 				"<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
@@ -106,10 +109,10 @@ function draw_map(world){
 			
 		}
 		var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
-		'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5'};
+		'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5', "No Data": "#d3d3d3"};
 		var legend = svg.append('g')
 			.attr('class', 'legend')
-			.attr('transform', 'translate(' + (width - 175) + ',' + 20 + ')')
+			.attr('transform', 'translate(' + (width - 210) + ',' + 20 + ')')
 			.selectAll('g')
 			.data(Object.keys(color_values))
 			.enter().append('g')
@@ -166,6 +169,7 @@ function draw_map(world){
 				return set_fill_color(d.attack_type)
 			})
 			.attr('r', 2)
+			.attr('opacity', 0.5)
 			.on("mouseover", tip.show)
 			.on('mouseout', tip.hide);
 
