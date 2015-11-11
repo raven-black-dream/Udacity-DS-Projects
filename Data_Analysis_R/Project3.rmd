@@ -2,7 +2,7 @@
 title: "Global Terrorism DB Project"
 author: "Evan Harley"
 date: "April 13, 2015"
-output: html_document
+output: pdf_document
 ---
 
 ##First Steps
@@ -53,8 +53,8 @@ data$weaptype1_txt[data$weaptype1_txt == invalid_weap2] <- "Explosives"
 Just to ensure that there aren't any date values that don't make sense I ran a tally of all of the day and month variables
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
-tally(group_by(data, imonth))
-tally(group_by(data, iday))
+#tally(group_by(data, imonth))
+#tally(group_by(data, iday))
 
 #removing invalid date data
 invalid_date <- data[data$iday == -99, ]
@@ -103,7 +103,7 @@ data$date = as.Date(data$date)
 data$day_of_week <- weekdays(data$date)
 ```
 
-________________________________________________________________________________________
+****
 
 ##Single Variable Explorations
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
@@ -121,7 +121,7 @@ The first plot that I plotted was a histogram of years which shows an almost lin
 
 There doesn't seem to be much variance in the month variable.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 ggplot(aes(x =iday), data = data) +
@@ -131,7 +131,7 @@ ggplot(aes(x =iday), data = data) +
 
 When I looked at the tally for days, there does not seem to be much variance
 
-________________________________________________________________________________________
+----
 
 Now I am going to take a look at the categorical variables
 
@@ -145,7 +145,7 @@ ggplot(aes(x = region_txt, y = n), data = region)+
 
 The next plot is of the region variable. This shows a low number in North America, East Asia, Central Asia, Eastern Europe, Russia, and Australasia. With high numbers in Central America, South America, Western Europe, and the Middle East.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 attacktype <- arrange(tally(group_by(data, attacktype1_txt)), desc(n))
@@ -157,7 +157,7 @@ ggplot(aes(x = attacktype1_txt, y = n), data = attacktype)+
 
 This graph shows that the three most commonly reported terorist incidents are Assassinations, Armed Assaults, and Bombings. It aslo shows that the least common terrorist actions are Barricade Incidents, Hijackings, and Unarmed Assaults. 
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 targtype <- arrange(tally(group_by(data, targtype1_txt)), desc(n))
@@ -169,7 +169,7 @@ ggplot(aes(x = targtype1_txt, y = n), data = targtype)+
 
 The bar chart is displaying the distribution of target types shows that there are 5 most common target types with the most common being Private Citizens, and the other four being businesses, government, police, and military buildings.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 weap_type <- arrange(tally(group_by(data, weaptype1_txt)), desc(n))
@@ -182,7 +182,7 @@ ggplot(aes(x = weaptype1_txt, y = n), data = weap_type)+
 
 Firearms and explosives are the the most common weapon types, as shown in the plot
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 tally(group_by(data, country_txt))
@@ -191,7 +191,7 @@ tally(group_by(data, city))
 
 This showed me some interesting information namely that there are about 28,000 city values, and that many of the city values actually hold a value describing the location of the incident. So, I will not likely use that feature in my visualizations. There were too many values in the country and city variables to plot effectively
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 dayofweek <- tally(group_by(data, day_of_week))
@@ -205,7 +205,7 @@ ggplot(aes(x = day_of_week, y = n), data = dayofweek)+
 
 There seems to be a decrease through the latter half of the week, with Friday, Saturday, and Sunday having significantly fewer incidents than there are on Monday, Tuesday, Wednesday, and Thursday
 
-________________________________________________________________________________________
+----
 
 So, the next thing that I wanted to take a look at was the distribution of number killed. In this histogram I noticed that there was a long tail, and that the number of attacks with less than ten kiled was a very large number. So, I made another histogram looking at less than 50 killed, and set the binwidth to 1 so that I could see what the most common number killed was. It turned out to be 0. 
 
@@ -218,7 +218,7 @@ ggplot(aes(x = nkill), data = data)+
 
 ```
 
-________________________________________________________________________________________
+----
 
 Having looked at the number killed, next logical step was to look at the number wounded.
 
@@ -232,7 +232,7 @@ ggplot(aes(x = nwound), data = subset(data, !is.na(data$nwound)))+
 
 This histogram shows that, as above with the number killed variable, the majority of incidents have no wounded.
 
-========================================================================================
+****
 
 ##Two Variable Explorations
 
@@ -250,7 +250,7 @@ ggplot(aes(x = iyear, y = mean_kill), data = nkill_by_year)+
 
 The first visualization that I decided to plot was taking a look at the relationship between year and number of people killed in incidents. This shows fairly clearly that while there are many terrorist attacks per year with significant number of people killed the average number of people killed is still rather small.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 nwound_by_year <- summarise(data_by_year, sum_wound = sum(nwound),
@@ -263,7 +263,7 @@ ggplot(aes(x = iyear, y = mean_wound), data = nwound_by_year)+
 
 I thought it might be interesting to take a look at the number of people injured by year. The mean value per year is a fair bit higher than the number number of people killed per year.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 data_by_month <- group_by(data, imonth)
@@ -278,7 +278,7 @@ ggplot(aes(x = imonth, y = mean_kill), data = nkill_by_month)+
 
 There seems between May and September to be an increase in the average number of people killed. But that seems to be the only trend in the data
 
-________________________________________________________________________________________
+----
 
 I wanted to see if there was any correlation between the number of terrorists killed in/after an incident and the number of people killed in the incident.
 
@@ -295,7 +295,7 @@ cor.test(data$nkillter, civilian_fatalities)
 
 This plot shows a rather sharp clear line where nkillter = 0. I subtracted number of terrorists killed from the total number killed because the number of terrorists killed is included in the total number killed. The correlation cooeficient of 0.046 suggests a very small correlation between the two fatality numbers
 
-________________________________________________________________________________________
+----
 
 After looking at that I wanted to see what the common percentage of terrorists involved in incidents that were killed. I decided to graph the percentage against the number of terrorists involved.
 
@@ -317,7 +317,7 @@ In the final iteration of the plot, the black dotted line shows the median value
 
 The plot has a horizontal bar at zero that stretches all the way across the plot. This shows that across all number of perpetrators there are many incidents with no resulting deaths to the terrorists involved. 
 
-========================================================================================
+****
 
 ##Multivariate Plots
 
@@ -351,7 +351,7 @@ ggplot(aes(x = gname, y = total_casualties), data = nkill_data)+
 
 This is a visualization showing the top 20 terrorist groups as shown by the number of casualties. I find it interesting that a goup that I have never heard of has the most casualties. In this graph the red bars show the total number of casualties of each group's attacks, and the blue bar show's the average number.
 
-________________________________________________________________________________________
+----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 data_by_date <- group_by(data, iyear, weaptype1_txt)
@@ -364,7 +364,8 @@ ggplot(aes(x = iyear, y = n), data = by_date_weap)+
 ```
 
 The above plot shows the trend in the incidence of specific weapon types over the time period the data set covers. It shows that there are only 5 commonly used weapon types, even though all have been used. Those which are not common are almost flat distributions.
-________________________________________________________________________________________
+
+----
 
 I wondered if there were regional specialties in Weapon Type. So, the plot below demonstrateswhich regions use what weapon types most often. I renamed the regions so that it would be a bit clearer in the plot. And I removed the four most common weapon types world wide (Firearms, Incendiary, Explosives, and Unknown).
 
@@ -414,7 +415,7 @@ ggplot(aes(x = weaptype1_txt, y = region_percent), data = by_region_weap)+
 
 The plot shows that there is a fair bit of regional variance. With only East Asia having examples of all weapons being used. I calculated a percentage of the total incidents that each weapon and plotted those by region. Showing that Australasia and Oceania have a much higher level of Chemical attacks, and Central America seems to only have melee attacks when you take out the most common weapon types.
 
-========================================================================================
+****
 
 ##Final Visualizations and Summary
 
@@ -469,7 +470,7 @@ ggplot(aes(x = attacktype1_txt, y = region_percent), data = by_region_atk)+
 
 The above plot shows, as the one centred around weapon types did, regional variances in the attack type preferred by terrorist organisations in the area. Central America shows the greatest percentage of Armed Assaults across the regions, and Central Asia seems to prefer Assassinations. 
 
-________________________________________________________________________________________
+-----
 
 ```{r, echo=FALSE, message=FALSE, warning=FALSE}
 nkill_data <- head(nkill_data, n = 9)
@@ -492,7 +493,7 @@ ggplot(aes(x = iyear, y = n), data = by_date_name)+
 
 This plot shows the attack number by year of the 9 most casualty causing terrorist organizations. I notice that only three of the organizations have distributions across the entire time span, with most of them being relatively short lived but prolific. Al-Qa'ida has an interesting distribution. They are 8th in terms of most Casualties caused and yet their number of incidents is very low. Even Al-Qa'ida in Iraq is showing a decreasing trend up to last year. There appear to only be two groups that are exhibiting a substantial increase in incident numbers. Shining path, who have been relatively quiet for most of the last decade, and the Taliban which has been climbing a great deal since they started their climb, shortly after 2000. The Taliban's current climb is very steep, and I will be looking forward to perusing the next release of the data set to see if the trend continues.
 
-________________________________________________________________________________________
+-----
 
 I first decided to take a look at this data set, because I first started looking at the material for the course  Exploratory Data Analysis with R in September hoping to prepare for the Data Analyst Nanodegree Program. I work in the security industry, and was living in the US on September 11th 2001. At work in the weeks leading up to the anniversary of that terrible day, there was a lot of talk about that incident and terrorism in general. I found the data set, and did some very basic plots to show people at work. I found the data set again on my computer when I set out to start this project, and thought I would use it for the project. 
 
@@ -513,7 +514,7 @@ ggplot(aes(x = date, y = (total_killed/1000)), data = by_date)+
 
 This last plot shows the cumulative rise in deaths attributed to terrorism over the last 43 years. The 70's showed a slow but steady climb, that shot up through the 80's and 90's, and became steeper still in 2005, and again in 2011. More than 260,000 lives have been lost to Terrorist acts since 1970.
 
-============================================
+****
 
 ##Reflections
 
