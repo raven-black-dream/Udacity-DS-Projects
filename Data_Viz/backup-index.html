@@ -1,0 +1,91 @@
+q2<!DOCTYPE html>
+<html>
+<head>  
+<meta charset="utf-8">
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="//d3js.org/topojson.v1.min.js"></script>
+<style>
+  h2 {
+        text-align: center;
+        color: black;
+      }
+       path {
+        stroke: "black";
+        fill: "lightgray";
+	}
+</style>
+
+<script type="text/javascript">  
+function draw_map(world){
+var margin = 75,
+     width = 1200,
+     height = 500;
+d3.select('body').append('h2').text('Terrorism Data 1970 - 2014');
+var svg = d3.select('body').append('svg')
+		.attr('width', margin + width)
+		.attr('height', margin + height)
+		.append('g')
+		.attr('class', 'map');		
+var projection = d3.geo.mercator()
+	.scale(120)
+	.translate([width / 2, height / 1.2]);
+
+var path = d3.geo.path().projection(projection);
+var map = svg.selectAll('path')
+		.data(world.features)
+		.enter()
+		.append('path')
+		.attr('class', function(d){
+			return 'subunit.' + d.properties.NAME})
+		.attr('d', path)
+		.style('fill', 'lightgray')
+		.style('stroke', 'black');
+		
+function plot_data(data){
+	
+	function agg_atk_type(leaves){
+	return leaves.length;
+	};
+	var nested = d3.nest()
+		.key(function(d){return d['country']; }).sortKeys(d3.ascending)
+		.key(function(d){return d['attack_type'];})
+		.rollup(agg_atk_type)
+		.entries(data);
+	var country_attack_type = {};
+	
+	for (var i = 0; i < nested.length; i++ ){
+	
+		var most_common = 0;
+		
+		for (var j = 0; j < nested[i].values.length; j++) {
+			if (nested[i].values[j].values > nested[i].values[most_common].values){
+				most_common = j;
+			};
+		};
+		var country = nested[i].key;
+		var attack = nested[i].values[most_common].key;
+		country_attack_type[country] = attack; 
+	};
+	debugger;
+	for (var key in country_attack_type){
+		map.selectAll('path.subunit.' + key)
+			.attr('class', '.'+ country_attack_type[key]);
+	}
+};
+var date_format = d3.time.format("%d-%m-%Y");
+d3.csv('global_terror_db_pruned.csv', function(d){
+		date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
+		d['date'] = date;
+		return d;
+		},
+		plot_data)
+
+};
+</script>
+</head>
+<body>
+<script type="text/javascript">
+d3.json('world.json', draw_map)
+</script>
+</body>
+</html>
