@@ -3,6 +3,7 @@
 <head>  
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 /*<script src="//d3js.org/topojson.v1.min.js"></script>*/	
 <style>
 h2 {
@@ -26,10 +27,26 @@ function draw_map(world){
 	height = 500,
 	active = d3.select(null);
 	d3.select('body').append('h2').text('Most Common Terrorist Attack Types between 1994 and 2014');
+
+	var tip = d3.tip()
+	.attr('class', 'd3-tip')
+	.offset([-10,0])
+	.html(function(d){
+		return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
+				"<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
+				"<strong>Group Responsible:</strong> <span>" + d.gname + "</span><br>" +
+				"<strong>Target Type:</strong> <span>" + d.targ_type + "</span><br>" +
+				"<strong>Weapon Type:</strong> <span>" + d.weapon_type + "</span><br>" +
+				"<strong>Number Wounded:</strong> <span>" + d.nwound + "</span><br>" +
+				"<strong>Number Killed:</strong> <span>" + d.nkill + "</span>";
+				
+	});
 	
 	var svg = d3.select('body').append('svg')
 	.attr('width', margin + width)
 	.attr('height', margin + height);
+
+	svg.call(tip);
 
 	svg.append('rect')
 		.attr('class', 'background')
@@ -148,7 +165,9 @@ function draw_map(world){
 			.attr('fill', function(d){
 				return set_fill_color(d.attack_type)
 			})
-			.attr('r', 2);
+			.attr('r', 2)
+			.on("mouseover", tip.show)
+			.on('mouseout', tip.hide);
 
 
 	}
