@@ -29,12 +29,6 @@ function draw_map(world){
 	active = d3.select(null);
 	d3.select('body').append('h2').text('Most Common Terrorist Attack Types between 1994 and 2014');
 
-	var zoom = d3.behavior.zoom()
-	.translate([0,0])
-	.scale(1)
-	.scaleExtent([1,8])
-	.on("zoom", zoomed)
-
 	var tip = d3.tip()
 	.attr('class', 'd3-tip')
 	.offset([-10,0])
@@ -56,20 +50,16 @@ function draw_map(world){
 	.attr('height', margin + height);
 
 	svg.call(tip);
-	
 
 	svg.append('rect')
 		.attr('class', 'background')
 		.attr("width", width + margin)
 		.attr('height', height + margin)
 		.on('click', reset);
-
 	var g = svg.append('g')
 		.attr('class', 'map')
 		.style("stroke-width", ".5px");
 	
-	svg.call(zoom)
-	svg.call(zoom.event)
 	var projection = d3.geo.mercator()
 	.scale(120)
 	.translate([width / 2, height / 1.25]);
@@ -187,22 +177,13 @@ function draw_map(world){
 	}
 
 	function set_fill_color(key) {
-		debugger;
-		if(key === undefined) return "#d3d3d3";
-		
 		var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
 		'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5'};
 		return color_values[key];
 	}
 
 	function clicked(d) {
-		
-		if(active.node() === this) return reset();
-		if(active[0][0] !== null){
-			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-			active.attr('fill', set_fill_color(country_attack_type[country]));
-			svg.selectAll('circle.data_point').remove();
-		}
+		if(active.node() === this) return reset()
 		active.classed("active", false);
 		active = d3.select(this);
 		active.attr('class', d.properties.ADMIN.replaceAll(' ', '_')).classed('active', true);
@@ -229,22 +210,18 @@ function draw_map(world){
 	}
 
 	function reset() {
+		debugger;
 		active.classed("active", false);
-		country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-		active.attr('fill', set_fill_color(country_attack_type[country]));
+		country = active.attr('class').split(' ')[0].replaceAll('_', ' ')
+		active.attr('fill', set_fill_color(country_attack_type[country]))
 		active = d3.select(null);
 
-		svg.selectAll('circle.data_point').remove();
+		svg.selectAll('circle.data_point').remove()
 
 		g.transition()
 			.duration(500)
 			.style("stroke-width", ".5px")
 			.attr("transform", "");
-	}
-
-	function zoomed(){
-		g.style("'stroke-width", .5 / d3.event.scale + "px");
-		g.attr('transform', 'translate(' +d3.event.translate + ')scale(' +d3.event.scale + ')');
 	}
 
 
