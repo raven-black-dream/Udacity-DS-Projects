@@ -88,7 +88,8 @@ h2 {
 			return d.properties.ADMIN.replaceAll(" ", "_") })
 		.attr('d', path)
 		.on('click', clicked)
-		.attr("fill", "#d3d3d3");
+		.attr("fill", "#d3d3d3")
+		.style('stroke', '#000000');
 
 
 		
@@ -132,7 +133,7 @@ h2 {
 					g.select('path.' + key_for_select)
 					.attr('fill', set_fill_color(country_attack_type[key]))
 					.transition()
-					.duration(500);
+					.duration(250);
 
 				}
 
@@ -172,7 +173,7 @@ debugger;
 
 				if(year > 2014) clearInterval(map_interval);
 
-			}, 1000)
+			}, 2500)
 		};
 
 
@@ -214,8 +215,9 @@ debugger;
 			.on("mouseover", tip.show)
 			.on('mouseout', tip.hide)
 			.transition()
-			.delay(100)
-			.duration(400);
+			.duration(400)
+			.delay(300);
+			
 
 
 		}
