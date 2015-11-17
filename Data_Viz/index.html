@@ -3,6 +3,7 @@
 <head>  
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <script src="http://d3js.org/d3.v3.min.js"></script>
+<script src='d3.slider.js'></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 
 <style>
@@ -14,69 +15,72 @@ h2 {
 	fill: none;
 	pointer-events: all;
 
-path {
-	stroke: #000000;
-	fill: #d3d3d3;
-}
+	path {
+		stroke: #000000;
+		fill: #d3d3d3;
+	}
 
-</style>
+	</style>
 
-<script type="text/javascript"> 
-function draw_map(world){
-	var margin = 75,
-	width = 1200,
-	height = 500,
-	active = d3.select(null);
-	d3.select('body').append('h2').text('Most Common Terrorist Attack Types between 1994 and 2014');
+	<script type="text/javascript"> 
+	/* Sets up svg space and map*/
+	function draw_map(world){
+		var margin = 75,
+		width = 1200,
+		height = 550,
+		active = d3.select(null);
+		d3.select('body').append('h2').text('Most Common Terrorist Attack Types between 1994 and 2014');
 
-	var zoom = d3.behavior.zoom()
-	.translate([0,0])
-	.scale(1)
-	.scaleExtent([1,8])
-	.on("zoom", zoomed)
+		/*Declares zoom handler*/
+		var zoom = d3.behavior.zoom()
+		.translate([0,0])
+		.scale(1)
+		.scaleExtent([1,8])
+		.on("zoom", zoomed)
 
-	var tip = d3.tip()
-	.attr('class', 'd3-tip')
-	.offset([-10,0])
-	.style("line-height", 1)
-	.style("background", "rgba(236, 232, 197, 0.5)")
-	.html(function(d){
-		return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
-				"<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
-				"<strong>Group Responsible:</strong> <span>" + d.gname + "</span><br>" +
-				"<strong>Target Type:</strong> <span>" + d.targ_type + "</span><br>" +
-				"<strong>Weapon Type:</strong> <span>" + d.weapon_type + "</span><br>" +
-				"<strong>Number Wounded:</strong> <span>" + d.nwound + "</span><br>" +
-				"<strong>Number Killed:</strong> <span>" + d.nkill + "</span>";
-				
-	});
-	
-	var svg = d3.select('body').append('svg')
-	.attr('width', margin + width)
-	.attr('height', margin + height);
+		/*Declares tooltip format*/
+		var tip = d3.tip()
+		.attr('class', 'd3-tip')
+		.offset([10,0])
+		.style("line-height", 1)
+		.style("background", "rgba(236, 232, 197, 0.5)")
+		.html(function(d){
+			return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
+			"<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
+			"<strong>Group Responsible:</strong> <span>" + d.gname + "</span><br>" +
+			"<strong>Target Type:</strong> <span>" + d.targ_type + "</span><br>" +
+			"<strong>Weapon Type:</strong> <span>" + d.weapon_type + "</span><br>" +
+			"<strong>Number Wounded:</strong> <span>" + d.nwound + "</span><br>" +
+			"<strong>Number Killed:</strong> <span>" + d.nkill + "</span>";
 
-	svg.call(tip);
-	
+		});
 
-	svg.append('rect')
+		var svg = d3.select('body').append('svg')
+		.attr('width', margin + width)
+		.attr('height', margin + height);
+
+		svg.call(tip);
+
+
+		svg.append('rect')
 		.attr('class', 'background')
 		.attr("width", width + margin)
 		.attr('height', height + margin)
 		.on('click', reset);
 
-	var g = svg.append('g')
+		var g = svg.append('g')
 		.attr('class', 'map')
 		.style("stroke-width", ".5px");
-	
-	svg.call(zoom)
-	svg.call(zoom.event)
-	var projection = d3.geo.mercator()
-	.scale(120)
-	.translate([width / 2, height / 1.25]);
-	
-	var path = d3.geo.path().projection(projection);
 
-	var map = g.selectAll('path')
+		svg.call(zoom)
+		svg.call(zoom.event)
+		var projection = d3.geo.mercator()
+		.scale(120)
+		.translate([width / 2, height / 1.25]);
+
+		var path = d3.geo.path().projection(projection);
+
+		var map = g.selectAll('path')
 		.data(world.features)
 		.enter()
 		.append('path')
@@ -85,84 +89,111 @@ function draw_map(world){
 		.attr('d', path)
 		.on('click', clicked)
 		.attr("fill", "#d3d3d3");
+
+
 		
-	function color_map(data){
+		function color_map(data){
 
-		function agg_atk_type(leaves){
-			return leaves.length;
-		};
-		var nested = d3.nest()
-			.key(function(d){return d['country']; }).sortKeys(d3.ascending)
-			.key(function(d){return d['attack_type'];})
-			.rollup(agg_atk_type)
-			.entries(data);
-		country_attack_type = {};
+			function update_map(years, data){
+				debugger;
+				years.sort(function(a,b){ (+a) - (+b)});
 
-		for (var i = 0; i < nested.length; i++ ){
+				if (years.length === 1){
+					var year_data = data.filter(function(d){ return +d['year'] === years[0];})
+				}
+				else{
+					var year_data = data.filter(function(d){return (+d['year'] >= years[0] && +d['year'] <= years[1]) })
+				}
 
-			var most_common = 0;
 
-			for (var j = 0; j < nested[i].values.length; j++) {
-				if (nested[i].values[j].values > nested[i].values[most_common].values){
-					most_common = j;
+				var nested = d3.nest()
+				.key(function(d){return d['country']; }).sortKeys(d3.ascending)
+				.key(function(d){return d['attack_type'];})
+				.rollup(function(leaves){ return leaves.length;})
+				.entries(year_data);
+				country_attack_type = {};
+
+				for (var i = 0; i < nested.length; i++ ){
+
+					var most_common = 0;
+
+					for (var j = 0; j < nested[i].values.length; j++) {
+						if (nested[i].values[j].values > nested[i].values[most_common].values){
+							most_common = j;
+						};
+					};
+					var country = nested[i].key;
+					var attack = nested[i].values[most_common].key;
+					country_attack_type[country] = attack; 
 				};
-			};
-			var country = nested[i].key;
-			var attack = nested[i].values[most_common].key;
-			country_attack_type[country] = attack; 
-		};
-		
-		for (var key in country_attack_type){
-			var key_for_select = key.replaceAll(' ', '_');
-			g.select('path.' + key_for_select)
-			.attr('fill', set_fill_color(country_attack_type[key]));
+
+				for (var key in country_attack_type){
+					var key_for_select = key.replaceAll(' ', '_');
+					g.select('path.' + key_for_select)
+					.attr('fill', set_fill_color(country_attack_type[key]))
+					.transition()
+					.duration(500);
+
+				}
+
+				d3.select('h2').text('Most Common Terrorist Attack Types between 1994 and ' + years[1]);
+			}
 			
-		}
-		var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
-		'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5', "No Data": "#d3d3d3"};
-		var legend = svg.append('g')
+			
+			var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
+			'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5', "No Data": "#d3d3d3"};
+			var legend = svg.append('g')
 			.attr('class', 'legend')
 			.attr('transform', 'translate(' + (width - 210) + ',' + 20 + ')')
 			.selectAll('g')
 			.data(Object.keys(color_values))
 			.enter().append('g')
 
-		legend.append('circle')
+			legend.append('circle')
 			.attr('cy', function(d, i){
-			return i * 20;
+				return i * 20;
 			})
 			.attr('r', 10)
 			.attr('fill', function(d){
 				
 				return color_values[d];
 			});
-		legend.append('text')
+			legend.append('text')
 			.attr('y', function(d, i) {
 				return i * 20 + 5;
 			})
 			.attr('x', 50)
 			.text(function(d) { return d;});
-	};
-	
-	
-	d3.csv('global_terror_db_pruned.csv', function(d){
-		var date_format = d3.time.format("%d-%m-%Y");
-		date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
-		d['date'] = date;
-		return d;
-	}, color_map);
+debugger;
+			year = 1994
+			var map_interval = setInterval(function() {
+				update_map([1994, year], data);
+				year ++
 
-	function plot_datapoints(data){
-		var country_data = [];
-		var country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-		for (var i = 0; i < data.length; i++){
-			if (data[i].country === country) {
-				if (data[i].lat != '' && data[i].lon != ''){
-					country_data.push(data[i]);	
+				if(year > 2014) clearInterval(map_interval);
+
+			}, 1000)
+		};
+
+
+		d3.csv('global_terror_db_pruned.csv', function(d){
+			var date_format = d3.time.format("%d-%m-%Y");
+			date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
+			d['date'] = date;
+			return d;
+		}, color_map);
+
+		function plot_datapoints(data){
+			var country_data = [];
+			var country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
+			for (var i = 0; i < data.length; i++){
+				if (data[i].country === country) {
+					if (data[i].lat != '' && data[i].lon != ''){
+						country_data.push(data[i]);	
+					};
 				};
 			};
-		};
-		g.append('g')
+			g.append('g')
 			.attr('class', 'point')
 			.selectAll('circle')
 			.data(country_data)
@@ -181,33 +212,35 @@ function draw_map(world){
 			.attr('r', 2)
 			.attr('opacity', 0.5)
 			.on("mouseover", tip.show)
-			.on('mouseout', tip.hide);
+			.on('mouseout', tip.hide)
+			.transition()
+			.delay(100)
+			.duration(400);
 
 
-	}
-
-	function set_fill_color(key) {
-		debugger;
-		if(key === undefined) return "#d3d3d3";
-		
-		var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
-		'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5'};
-		return color_values[key];
-	}
-
-	function clicked(d) {
-		
-		if(active.node() === this) return reset();
-		if(active[0][0] !== null){
-			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-			active.attr('fill', set_fill_color(country_attack_type[country]));
-			svg.selectAll('circle.data_point').remove();
 		}
-		active.classed("active", false);
-		active = d3.select(this);
-		active.attr('class', d.properties.ADMIN.replaceAll(' ', '_')).classed('active', true);
-		active.attr("fill", "#d3d3d3")
-		var bounds = path.bounds(d),
+		/* Sets fill color in respect to the incident type*/
+		function set_fill_color(key) {
+			if(key === undefined) return "#d3d3d3";
+
+			var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
+			'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5'};
+			return color_values[key];
+		}
+		/*Adds zoom to bounding box feature*/
+		function clicked(d) {
+
+			if(active.node() === this) return reset();
+			if(active[0][0] !== null){
+				country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
+				active.attr('fill', set_fill_color(country_attack_type[country]));
+				svg.selectAll('circle.data_point').remove();
+			}
+			active.classed("active", false);
+			active = d3.select(this);
+			active.attr('class', d.properties.ADMIN.replaceAll(' ', '_')).classed('active', true);
+			active.attr("fill", "#d3d3d3")
+			var bounds = path.bounds(d),
 			dx = bounds[1][0] - bounds[0][0],
 			dy = bounds[1][1] - bounds[0][1],
 			x = (bounds[0][0] + bounds[1][0]) / 2,
@@ -215,51 +248,51 @@ function draw_map(world){
 			scale = .9 / Math.max(dx / width, dy / height),
 			translate = [width / 2 - scale * x, height / 2 - scale * y]
 			g.transition()
-				.duration(100)
-				.style('stroke-width', 0.5 / scale + "px")
-				.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+			.duration(100)
+			.style('stroke-width', 0.5 / scale + "px")
+			.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 
-		d3.csv('global_terror_db_pruned.csv', function(d){
-			var date_format = d3.time.format("%d-%m-%Y");
-			date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
-			d['date'] = date;
-			return d
-		}, plot_datapoints);
+			d3.csv('global_terror_db_pruned.csv', function(d){
+				var date_format = d3.time.format("%d-%m-%Y");
+				date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
+				d['date'] = date;
+				return d
+			}, plot_datapoints);
 
-	}
+		}
 
-	function reset() {
-		active.classed("active", false);
-		country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-		active.attr('fill', set_fill_color(country_attack_type[country]));
-		active = d3.select(null);
+		function reset() {
+			active.classed("active", false);
+			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
+			active.attr('fill', set_fill_color(country_attack_type[country]));
+			active = d3.select(null);
 
-		svg.selectAll('circle.data_point').remove();
+			svg.selectAll('circle.data_point').remove();
 
-		g.transition()
+			g.transition()
 			.duration(500)
 			.style("stroke-width", ".5px")
 			.attr("transform", "");
-	}
+		}
 
-	function zoomed(){
-		g.style("'stroke-width", .5 / d3.event.scale + "px");
-		g.attr('transform', 'translate(' +d3.event.translate + ')scale(' +d3.event.scale + ')');
-	}
+		function zoomed(){
+			g.style("'stroke-width", .5 / d3.event.scale + "px");
+			g.attr('transform', 'translate(' +d3.event.translate + ')scale(' +d3.event.scale + ')');
+		}
 
 
-};
-String.prototype.replaceAll = function(search, replace) {
-	if (replace === undefined) {
-		return this.toString();
+	};
+	String.prototype.replaceAll = function(search, replace) {
+		if (replace === undefined) {
+			return this.toString();
+		}
+		return this.split(search).join(replace);
 	}
-	return this.split(search).join(replace);
-}
-</script>
-</head>
-<body>
-<script type="text/javascript">
-d3.json('world.json', draw_map)
-</script>
-</body>
-</html>
+	</script>
+	</head>
+	<body>
+	<script type="text/javascript">
+	d3.json('world.json', draw_map)
+	</script>
+	</body>
+	</html>
