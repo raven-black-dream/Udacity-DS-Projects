@@ -3,7 +3,6 @@
 <head>  
 <meta http-equiv="content-type" content="text/html; charset=utf-8" />
 <script src="http://d3js.org/d3.v3.min.js"></script>
-<script src='d3.slider.js'></script>
 <script src="http://labratrevenge.com/d3-tip/javascripts/d3.tip.v0.6.3.js"></script>
 
 <style>
@@ -24,12 +23,22 @@ h2 {
 
 	<script type="text/javascript"> 
 	/* Sets up svg space and map*/
+	time_format = d3.time.format('%Y');
 	function draw_map(world){
 		var margin = 75,
 		width = 1200,
 		height = 550,
 		active = d3.select(null);
 		d3.select('body').append('h2').text('Most Common Terrorist Attack Types between 1994 and 2014');
+
+		
+		var year_rng_1 = time_format.parse("1994");
+		var year_rng_2 = time_format.parse("2014")
+		var x = d3.time.scale()
+		.domain([year_rng_1, year_rng_2])
+		.range([0, 1025])
+		.clamp(true)
+		.ticks(d3.time.year, 1);
 
 		/*Declares zoom handler*/
 		var zoom = d3.behavior.zoom()
@@ -70,7 +79,7 @@ h2 {
 
 		var g = svg.append('g')
 		.attr('class', 'map')
-		.style("stroke-width", ".5px");
+		.style("stroke-width", ".25px");
 
 		svg.call(zoom)
 		svg.call(zoom.event)
@@ -85,7 +94,7 @@ h2 {
 		.enter()
 		.append('path')
 		.attr('class', function(d){
-			return d.properties.ADMIN.replaceAll(" ", "_") })
+			return d.properties.admin.replaceAll(" ", "_") })
 		.attr('d', path)
 		.on('click', clicked)
 		.attr("fill", "#d3d3d3")
@@ -96,16 +105,13 @@ h2 {
 		function color_map(data){
 
 			function update_map(years, data){
-				debugger;
 				years.sort(function(a,b){ (+a) - (+b)});
-
 				if (years.length === 1){
 					var year_data = data.filter(function(d){ return +d['year'] === years[0];})
 				}
 				else{
 					var year_data = data.filter(function(d){return (+d['year'] >= years[0] && +d['year'] <= years[1]) })
 				}
-
 
 				var nested = d3.nest()
 				.key(function(d){return d['country']; }).sortKeys(d3.ascending)
@@ -127,13 +133,13 @@ h2 {
 					var attack = nested[i].values[most_common].key;
 					country_attack_type[country] = attack; 
 				};
-
+				debugger;
 				for (var key in country_attack_type){
 					var key_for_select = key.replaceAll(' ', '_');
 					g.select('path.' + key_for_select)
 					.attr('fill', set_fill_color(country_attack_type[key]))
 					.transition()
-					.duration(250);
+					.duration(500);
 
 				}
 
@@ -165,15 +171,70 @@ h2 {
 			})
 			.attr('x', 50)
 			.text(function(d) { return d;});
-debugger;
-			year = 1994
+
+			year = time_format.parse("1994")
 			var map_interval = setInterval(function() {
-				update_map([1994, year], data);
-				year ++
+				debugger;
+				update_map([1994, +time_format(year)], data);
+				var next_year = +time_format(year) + 1
+				year = time_format.parse(next_year.toString())
 
-				if(year > 2014) clearInterval(map_interval);
+				if(+time_format(year) > 2014) {
+					clearInterval(map_interval);
+					debugger;
 
-			}, 2500)
+					var brush = d3.svg.brush()
+						.x(x)
+						.extent([0,0])
+						.on('brush', brushed);
+
+					svg.append('g')
+						.attr('class', 'x axis')
+						.attr('transform', 'translate(75,' + 550 + ')')
+						.call(d3.svg.axis()
+							.scale(x)
+							.orient('bottom'));
+					
+
+  					var slider = svg.append('g')
+  						.attr('class', 'slider')
+  						.call(brush);
+
+  					slider.selectAll('.extent,.resize')
+  					.remove();
+
+  					var handle = slider.append('circle')
+  					.attr('class', 'handle')
+  					.attr('transform', 'translate(75,' + 550 + ')')
+  					.attr('r', 5)
+  					.attr('fill', "#d0d0d0");
+
+  					slider
+  						.call(brush.event)
+  						.transition()
+  						.duration(500)
+  						.call(brush.extent([1994,1994]))
+  						.call(brush.event);
+
+  					function brushed(){
+			 			var value = brush.extent()[0];
+
+  						if (d3.event.sourceEvent) { // not a programmatic event
+    					value = x.invert(d3.mouse(this)[0]);
+    					brush.extent([value, value]);
+  						}
+  			
+  						handle.attr('cx', x(value))
+  						update_map([1994, +time_format(value)], data)
+					}		
+
+					}
+				
+			}, 1500)
+
+		
+
+			
 		};
 
 
@@ -229,6 +290,7 @@ debugger;
 			'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5'};
 			return color_values[key];
 		}
+
 		/*Adds zoom to bounding box feature*/
 		function clicked(d) {
 
@@ -294,7 +356,7 @@ debugger;
 	</head>
 	<body>
 	<script type="text/javascript">
-	d3.json('world.json', draw_map)
+	d3.json('world_countries.json', draw_map)
 	</script>
 	</body>
 	</html>
