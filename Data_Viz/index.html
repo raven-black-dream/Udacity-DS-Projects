@@ -184,32 +184,31 @@ h3 {
 				if(+year > 2014) {
 					clearInterval(map_interval);
 					d3.select('h3').text('');
-					debugger;
 					var years = []
 					for (i = 1994; i < 2015; i++){
 						years.push(i)
 					}
 					formatter = d3.format("")
 					slider = d3.slider()
-						.min(1994)
-						.max(2014)
-						.ticks(20)
-						.tickFormat(function(d){ return formatter(d) })
-						.stepValues(years)
-						.callback(function(evt){ update_map([1994, slider.value()], data)});
+					.min(1994)
+					.max(2014)
+					.ticks(20)
+					.tickFormat(function(d){ return formatter(d) })
+					.stepValues(years)
+					.callback(function(evt){ update_map([1994, slider.value()], data)});
 
 					var slide = d3.select('body').append('div')
-						.attr('class', 'slider')
-						.attr('width', 1100)
-						.attr('transform', 'translate(' + 75 + ',' + 550 + ')')
-						.call(slider);
+					.attr('class', 'slider')
+					.attr('width', 1100)
+					.attr('transform', 'translate(' + 75 + ',' + 550 + ')')
+					.call(slider);
 
 					d3.select('h3').text("Click on a country for a closer look")
-					}
+				}
 				
-			}, 1500)
+			}, 300)
 			
-		
+
 
 			
 		};
@@ -225,34 +224,29 @@ h3 {
 		function plot_datapoints(data){
 
 
-			function update_datapoints(years, data){
-				//get data for the selected country
-				var country_data = [];
-				var country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
-				for (var i = 0; i < data.length; i++){
-					if (data[i].country === country) {
-						if (data[i].lat != '' && data[i].lon != ''){
-							country_data.push(data[i]);	
-						};
-					};
-				};
+			function update_datapoints(years, country_data){
 				//filter the data by selected year
 				years.sort(function(a,b){ (+a) - (+b)});
 				if (years.length === 1){
 					var year_data = country_data.filter(function(d){ return +d['year'] === years[0];})
+					d3.select('h2').text('Terrorist Incidents in ' + country + ' in ' + years[0]);
 				}
 				else{
 					var year_data = country_data.filter(function(d){return (+d['year'] >= years[0] && +d['year'] <= years[1]) })
+					d3.select('h2').text('Terrorist Incidents in ' + country + ' between ' + years[0] + ' and ' + years[1]);
 				}
-				d3.select('h2').text('Terrorist Incidents in ' + country + ' between ' + years[0] + ' and ' + years[1]);
+
+				
 				//append circles for each data point
-				g = g.append('g')
-				.attr('class', 'point')
 
 
-				data_points = g.selectAll('circle')
+				debugger;
+				var data_points = g.selectAll('circle.data_point')
 				.data(year_data)
-				.enter()
+
+				data_points.exit().remove()
+
+				data_points.enter()
 				.append('circle')
 				.attr('class', 'data_point')
 				.attr('cx', function(d){
@@ -265,7 +259,7 @@ h3 {
 					return set_fill_color(d.attack_type)
 				})
 				.attr('r', 2)
-				.attr('opacity', 0.5)
+				.attr('opacity', 0.7)
 				.style('stroke', '#000000')
 				.style('stroke-width', 0.25)
 				.on("mouseover", tip.show)
@@ -273,11 +267,37 @@ h3 {
 
 				
 			};
+			
+			var country_data = [];
+			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
+			for (var i = 0; i < data.length; i++){
+				if (data[i].country === country) {
+					if (data[i].lat != '' && data[i].lon != ''){
+						
+						country_data.push(data[i]);	
+					};
+				};
+			};
 
-		var year = 1994;
-		var data_point_interval	= setInterval(function() {
+			points = g.append('g')
+			.attr('class', 'point')
+			.selectAll('circle.data_point')
+			.data(country_data)
+			.enter()
+			.append('circle')
+			.attr('class', 'data_point')
+			.attr('cx', function(d){
+				return projection([+ d.lon, + d.lat])[0];
+			})
+			.attr('cy', function(d){
+				return projection([+ d.lon, + d.lat])[1];
+			})
+			.attr('fill', '#d3d3d3');
+
+			var year = 1994;
+			var data_point_interval	= setInterval(function() {
 				d3.select('h3').text("Animating please wait")
-				update_datapoints([1994, year], data);
+				update_datapoints([1994, year], country_data);
 				year += 1
 
 				if(year > 2014) {
@@ -288,18 +308,18 @@ h3 {
 					for (i = 1994; i < 2015; i++){
 						years.push(i)
 					}
-					debugger;
-					/*formatter = d3.format("")
+					
+					formatter = d3.format("")
 					slider = d3.slider()
-						.min(1994)
-						.max(2014)
-						.ticks(20)
-						.tickFormat(function(d){ return formatter(d) })
-						.stepValues(years)
-						.callback(function(evt){ update_datapoints([1994, slider.value()], data)});
+					.min(1994)
+					.max(2014)
+					.ticks(20)
+					.tickFormat(function(d){ return formatter(d) })
+					.stepValues(years)
+					.callback(function(evt){ update_datapoints([slider.value()], country_data)});
 
 					var slide = d3.select('div.slider')
-						.call(slider); */
+					.call(slider);
 				}
 			}, 1000);
 
@@ -365,6 +385,7 @@ h3 {
 			.attr("transform", "");
 
 			d3.select('h2').text('Most Common Terrorist Attack Types')
+			d3.select('h3').text("Click on a country for a closer look")
 
 			var years = []
 			for (i = 1994; i < 2015; i++){
@@ -373,15 +394,15 @@ h3 {
 			formatter = d3.format("")
 
 			slider = d3.slider()
-						.min(1994)
-						.max(2014)
-						.ticks(20)
-						.tickFormat(function(d){ return formatter(d) })
-						.stepValues(years)
-						.callback(function(evt){ update_datapoints([1994, slider.value()], data)});
+			.min(1994)
+			.max(2014)
+			.ticks(20)
+			.tickFormat(function(d){ return formatter(d) })
+			.stepValues(years)
+			.callback(function(evt){ update_datapoints([1994, slider.value()], data)});
 
-					var slide = d3.select('div.slider')
-						.call(slider);
+			var slide = d3.select('div.slider')
+			.call(slider);
 		}
 
 		function zoomed(){
