@@ -33,7 +33,7 @@ h3 {
 	function draw_map(world){
 		var margin = 75,
 		width = 1200,
-		height = 475,
+		height = 425,
 		active = d3.select(null);
 		d3.select('body').append('h2').text('Most Common Terrorist Attack Types');
 		d3.select('body').append('h3').text('Animating please wait')
@@ -200,7 +200,7 @@ h3 {
 					var slide = d3.select('body').append('div')
 					.attr('class', 'slider')
 					.attr('width', 1100)
-					.attr('transform', 'translate(' + 75 + ',' + 550 + ')')
+					.attr('transform', 'translate(' + 75 + ',' + 500 + ')')
 					.call(slider);
 
 					d3.select('h3').text("Click on a country for a closer look")
