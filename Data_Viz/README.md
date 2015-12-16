@@ -11,9 +11,9 @@ Feedback:
 
 D Wood:
 
-* Mousewheel zoom feature (done)
-* Clarification of what the colors mean(done)
-* Perhaps change the map projection (Changed the detail level from 10m resolution to 50m)
+* Mousewheel zoom feature - Done
+* Clarification of what the colors mean - Done
+* Perhaps change the map projection - Changed the detail level from 10m resolution to 50m
 
 S Eastman:
 
