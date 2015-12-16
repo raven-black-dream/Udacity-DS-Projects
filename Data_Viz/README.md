@@ -17,9 +17,9 @@ D Wood:
 
 S Eastman:
 
-* "Add news paper clippings"(Would be great if reasonably accessable, would definitely consider doing this if it were a product)
-* If possible add a link to more information about each group involved (No reliable data available.)
-* Make tooltip background more opaque (done)
+* "Add news paper clippings" - Would be great if reasonably accessable, would definitely consider doing this if it were a product
+* If possible add a link to more information about each group involved - No reliable data available.
+* Make tooltip background more opaque - done
 
 D Grossman-Laskin:
 
