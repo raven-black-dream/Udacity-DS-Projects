@@ -19,11 +19,35 @@ h3 {
 .background {
 	fill: none;
 	pointer-events: all;
-
+	
 	path {
 		stroke: #000000;
 		fill: #d3d3d3;
 	}
+}
+.play circle {
+  fill: white;
+  stroke: black;
+  stroke-width: 3px;
+}
+
+.play:hover path {
+  fill: red;
+}
+
+.play.mousedown circle {
+  fill: red;
+}
+
+.play.mousedown path {
+  fill: white;
+}
+
+.play rect {
+  fill: none;
+  pointer-events: all;
+  cursor: pointer;
+}
 
 	</style>
 
@@ -40,84 +64,185 @@ h3 {
 		
 		//Declares zoom handler
 		var zoom = d3.behavior.zoom()
-		.translate([0,0])
-		.scale(1)
-		.scaleExtent([1,8])
-		.on("zoom", zoomed)
+		  .translate([0,0])
+		  .scale(1)
+		  .scaleExtent([1,8])
+		  .on("zoom", zoomed)
 
 		//Declares tooltip format
 		var tip = d3.tip()
-		.attr('class', 'd3-tip')
-		.offset([10,0])
-		.style("line-height", 1)
-		.style("background", "rgba(236, 232, 197, 0.5)")
-		.html(function(d){
-			return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
-			"<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
-			"<strong>Group Responsible:</strong> <span>" + d.gname + "</span><br>" +
-			"<strong>Target Type:</strong> <span>" + d.targ_type + "</span><br>" +
-			"<strong>Weapon Type:</strong> <span>" + d.weapon_type + "</span><br>" +
-			"<strong>Number Wounded:</strong> <span>" + d.nwound + "</span><br>" +
-			"<strong>Number Killed:</strong> <span>" + d.nkill + "</span>";
+		  .attr('class', 'd3-tip')
+		  .offset([10,0])
+		  .style("line-height", 1)
+		  .style("background", "rgba(236, 232, 197, 0.5)")
+		  .html(function(d){
+		  	  return "<strong>Date:</strong> <span>" + d.date + "</span><br>" +
+			  "<strong>Incident Type:</strong> <span>" + d.attack_type + "</span><br>" +
+			  "<strong>Group Responsible:</strong> <span>" + d.gname + "</span><br>" +
+			  "<strong>Target Type:</strong> <span>" + d.targ_type + "</span><br>" +
+			  "<strong>Weapon Type:</strong> <span>" + d.weapon_type + "</span><br>" +
+			  "<strong>Number Wounded:</strong> <span>" + d.nwound + "</span><br>" +
+			  "<strong>Number Killed:</strong> <span>" + d.nkill + "</span>";
 
 		});
 
 		var svg = d3.select('body').append('svg')
-		.attr('width', margin + width)
-		.attr('height', margin + height);
+		  .attr('width', margin + width)
+		  .attr('height', margin + height);
 
 		svg.call(tip);
 
 
 		svg.append('rect')
-		.attr('class', 'background')
-		.attr("width", width + margin)
-		.attr('height', height + margin)
-		.on('click', reset);
+		  .attr('class', 'background')
+		  .attr("width", width + margin)
+		  .attr('height', height + margin)
+		  .on('click', reset);
 
 		var g = svg.append('g')
-		.attr('class', 'map')
-		.style("stroke-width", ".25px");
+		  .attr('class', 'map')
+		  .style("stroke-width", ".25px");
 
 		svg.call(zoom)
 		svg.call(zoom.event)
 		var projection = d3.geo.mercator()
-		.scale(120)
-		.translate([width / 2, height / 1.25]);
+		  .scale(120)
+		  .translate([width / 2, height / 1.25]);
 
 		var path = d3.geo.path().projection(projection);
 
 		var map = g.selectAll('path')
-		.data(world.features)
-		.enter()
-		.append('path')
-		.attr('class', function(d){
-			return d.properties.admin.replaceAll(" ", "_") })
-		.attr('d', path)
-		.on('click', clicked)
-		.attr("fill", "#d3d3d3")
-		.style('stroke', '#000000');
+		  .data(world.features)
+		  .enter()
+		  .append('path')
+		  .attr('class', function(d){
+			  return d.properties.admin.replaceAll(" ", "_") })
+		  .attr('d', path)
+		  .on('click', clicked)
+		  .attr("fill", "#d3d3d3")
+		  .style('stroke', '#000000');
 
 
 		//color's the map according to the most common Attack Type in the Data for that country
 		function color_map(data){
-			//update function to allow animation across the span of the years covered by the data set
+			Global_data = data
+			
+			//creates a legend
+			var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
+			'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5', "No Data": "#d3d3d3"};
+			var legend = svg.append('g')
+			  .attr('class', 'legend')
+			  .attr('transform', 'translate(' + (width - 210) + ',' + 20 + ')')
+			  .selectAll('g')
+			  .data(Object.keys(color_values))
+			  .enter().append('g')
+
+			legend.append('circle')
+			  .attr('cy', function(d, i){
+				  return i * 20;
+			  })
+			  .attr('r', 10)
+			  .attr('fill', function(d){
+				  return color_values[d];
+			  })
+			  .style('stroke', "#000000")
+			  .style('stroke-width', 0.25);
+			legend.append('text')
+			  .attr('y', function(d, i) {
+				  return i * 20 + 5;
+			  })
+			  .attr('x', 50)
+			  .text(function(d) { return d;});
+
+			//Animates the colour change over the years covered in the data set.
+			function animate_colour(){
+			var year = 1994
+			var map_interval = setInterval(function() {
+				update_map([1994, year], data);
+				year += 1
+
+				if(+year > 2014) {
+					clearInterval(map_interval);
+					d3.select('h3').text('');
+					var years = []
+					for (i = 1994; i < 2015; i++){
+						years.push(i)
+					}
+					formatter = d3.format("")
+					slider = d3.slider()
+					  .min(1994)
+					  .max(2014)
+					  .ticks(20)
+					  .tickFormat(function(d){ return formatter(d) })
+					  .stepValues(years)
+					  .callback(function(evt){ update_map([1994, slider.value()], data)});
+
+					var slide = d3.select('body').append('div')
+					  .attr('class', 'slider')
+					  .attr('width', 1100)
+					  .attr('transform', 'translate(' + 75 + ',' + 500 + ')')
+					  .call(slider);
+
+					d3.select('h3').text("Click on a country for a closer look")
+				}
+				
+			}, 1300)
+			};
+			//sets  the starting image as the colour distribution across the entire time span
+			update_map([1994,2014], data);
+			//creates a play button and removes it when clicked
+			var play = svg.append("g")
+			  .attr("id", "play_button")
+      		  .attr("class", "play");
+
+			play.append("circle")
+		      .attr("r", 45)
+		      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+
+			play.append("path")
+		      .attr("d", "M-22,-30l60,30l-60,30z")
+		      .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")scale(.7)");
+
+			play.append("rect")
+		      .attr("width", width)
+		      .attr("height", height)
+		      .on("mousedown", function() {
+		        play.classed("mousedown", true);
+		        d3.select(window).on("mouseup", function() { play.classed("mousedown", false); });
+		      })
+		      .on("click", function() {
+		        resetAll();
+		        animate_colour();
+		      });
+
+		  function resetAll() {
+		    d3.select("#play_button").remove()
+		  }
+
+
+			
+		};
+
+		//update function to allow animation across the span of the years covered by the data set
 			function update_map(years, data){
 				//ensures that the years in the array are sorted from least to greatest
 				years.sort(function(a,b){ (+a) - (+b)});
 				//filters the data for the selected year
 				if (years.length === 1){
-					var year_data = data.filter(function(d){ return +d['year'] === years[0];})
+					var year_data = data.filter(function(d){ 
+						return +d['year'] === years[0];
+					})
+				} else {
+					var year_data = data.filter(function(d){
+						return (+d['year'] >= years[0] && +d['year'] <= years[1]) 
+					})
 				}
-				else{
-					var year_data = data.filter(function(d){return (+d['year'] >= years[0] && +d['year'] <= years[1]) })
-				}
-				//nexts the data first by country then by attack type and counts the entries for each attack type
+				//nests the data first by country then by attack type and counts the entries for each attack type
 				var nested = d3.nest()
-				.key(function(d){return d['country']; }).sortKeys(d3.ascending)
-				.key(function(d){return d['attack_type'];})
-				.rollup(function(leaves){ return leaves.length;})
-				.entries(year_data);
+				  .key(function(d){return d['country']; }).sortKeys(d3.ascending)
+				  .key(function(d){return d['attack_type'];})
+				  .rollup(function(leaves){ return leaves.length;})
+				  .entries(year_data);
 				country_attack_type = {};
 
 				/*Finds the most common attack type for each country 
@@ -138,80 +263,14 @@ h3 {
 				for (var key in country_attack_type){
 					var key_for_select = key.replaceAll(' ', '_');
 					g.select('path.' + key_for_select)
-					.attr('fill', set_fill_color(country_attack_type[key]))
-					.transition()
-					.duration(500);
+					  .attr('fill', set_fill_color(country_attack_type[key]))
+					  .transition()
+					  .duration(500);
 
 				}
 
 				d3.select('h2').text('Most Common Terrorist Attack Types between 1994 and ' + years[1]);
 			}
-			
-			//creates a legend
-			var color_values = {'Armed Assault': '#8dd3c7', 'Assassination': '#ffffb3', 'Bombing/Explosion': '#bebada','Facility/Infrastructure Attack': '#fb8072',
-			'Hijacking': '#80b1d3','Hostage Taking (Barricade Incident)': '#fdb462','Hostage Taking (Kidnapping)': '#b3de69','Unarmed Assault': '#fccde5', "No Data": "#d3d3d3"};
-			var legend = svg.append('g')
-			.attr('class', 'legend')
-			.attr('transform', 'translate(' + (width - 210) + ',' + 20 + ')')
-			.selectAll('g')
-			.data(Object.keys(color_values))
-			.enter().append('g')
-
-			legend.append('circle')
-			.attr('cy', function(d, i){
-				return i * 20;
-			})
-			.attr('r', 10)
-			.attr('fill', function(d){
-				
-				return color_values[d];
-			})
-			.style('stroke', "#000000")
-			.style('stroke-width', 0.25);
-			legend.append('text')
-			.attr('y', function(d, i) {
-				return i * 20 + 5;
-			})
-			.attr('x', 50)
-			.text(function(d) { return d;});
-
-			//Animates the colour change over the years covered in the data set.
-			var year = 1994
-			var map_interval = setInterval(function() {
-				update_map([1994, year], data);
-				year += 1
-
-				if(+year > 2014) {
-					clearInterval(map_interval);
-					d3.select('h3').text('');
-					var years = []
-					for (i = 1994; i < 2015; i++){
-						years.push(i)
-					}
-					formatter = d3.format("")
-					slider = d3.slider()
-					.min(1994)
-					.max(2014)
-					.ticks(20)
-					.tickFormat(function(d){ return formatter(d) })
-					.stepValues(years)
-					.callback(function(evt){ update_map([1994, slider.value()], data)});
-
-					var slide = d3.select('body').append('div')
-					.attr('class', 'slider')
-					.attr('width', 1100)
-					.attr('transform', 'translate(' + 75 + ',' + 500 + ')')
-					.call(slider);
-
-					d3.select('h3').text("Click on a country for a closer look")
-				}
-				
-			}, 1300)
-			
-
-
-			
-		};
 
 
 		d3.csv('global_terror_db_pruned.csv', function(d){
@@ -228,46 +287,48 @@ h3 {
 				//filter the data by selected year
 				years.sort(function(a,b){ (+a) - (+b)});
 				if (years.length === 1){
-					var year_data = country_data.filter(function(d){ return +d['year'] === years[0];})
+					var year_data = country_data.filter(function(d)
+						{ return +d['year'] === years[0];
+					})
 					d3.select('h2').text('Terrorist Incidents in ' + country + ' in ' + years[0]);
-				}
-				else{
-					var year_data = country_data.filter(function(d){return (+d['year'] >= years[0] && +d['year'] <= years[1]) })
+				} else  {
+					var year_data = country_data.filter(function(d){
+						return (+d['year'] >= years[0] && +d['year'] <= years[1]) 
+					})
 					d3.select('h2').text('Terrorist Incidents in ' + country + ' between ' + years[0] + ' and ' + years[1]);
 				}
 
 				
 				//append circles for each data point
 
-
-				debugger;
 				var data_points = g.selectAll('circle.data_point')
-				.data(year_data)
+				  .data(year_data)
 
 				data_points.exit().remove()
 
 				data_points.enter()
-				.append('circle')
-				.attr('class', 'data_point')
-				.attr('cx', function(d){
-					return projection([+ d.lon, + d.lat])[0];
-				})
-				.attr('cy', function(d){
-					return projection([+ d.lon, + d.lat])[1];
-				})
-				.attr('fill', function(d){
-					return set_fill_color(d.attack_type)
-				})
-				.attr('r', 2)
-				.attr('opacity', 0.7)
-				.style('stroke', '#000000')
-				.style('stroke-width', 0.25)
-				.on("mouseover", tip.show)
-				.on('mouseout', tip.hide);
+				  .append('circle')
+				  .attr('class', 'data_point')
+				  .attr('cx', function(d){
+				  	  return projection([+ d.lon, + d.lat])[0];
+				  })
+				  .attr('cy', function(d){
+					  return projection([+ d.lon, + d.lat])[1];
+				  })
+				  .attr('fill', function(d){
+					  return set_fill_color(d.attack_type)
+				  })
+				  .attr('r', 2)
+				  .attr('opacity', 0.7)
+				  .style('stroke', '#000000')
+				  .style('stroke-width', 0.25)
+				  .on("mouseover", tip.show)
+				  .on('mouseout', tip.hide);
 
 				
 			};
-			
+			/*Filters first only the incident in the selected country, then leaves out data points without
+			GPS coordinates*/
 			var country_data = [];
 			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
 			for (var i = 0; i < data.length; i++){
@@ -279,49 +340,40 @@ h3 {
 				};
 			};
 
+			//appends a point to the map for each incident in the country
 			points = g.append('g')
-			.attr('class', 'point')
-			.selectAll('circle.data_point')
-			.data(country_data)
-			.enter()
-			.append('circle')
-			.attr('class', 'data_point')
-			.attr('cx', function(d){
-				return projection([+ d.lon, + d.lat])[0];
-			})
-			.attr('cy', function(d){
-				return projection([+ d.lon, + d.lat])[1];
-			})
-			.attr('fill', '#d3d3d3');
-
-			var year = 1994;
-			var data_point_interval	= setInterval(function() {
-				d3.select('h3').text("Animating please wait")
-				update_datapoints([1994, year], country_data);
-				year += 1
-
-				if(year > 2014) {
-					clearInterval(data_point_interval);
-					d3.select('h3').text('Hover over data points for more information')
-
-					var years = []
+			  .attr('class', 'point')
+			  .selectAll('circle.data_point')
+			  .data(country_data)
+			  .enter()
+			  .append('circle')
+			  .attr('class', 'data_point')
+			  .attr('cx', function(d){
+				  return projection([+ d.lon, + d.lat])[0];
+			  })
+			  .attr('cy', function(d){
+				  return projection([+ d.lon, + d.lat])[1];
+			  })
+			  .attr('fill', '#d3d3d3');
+			//Sets the initial circles marking the incidents in 1994
+			update_datapoints([1994], country_data)
+			//puts together a array of year numbers for the slider
+			var years = []
 					for (i = 1994; i < 2015; i++){
 						years.push(i)
 					}
-					
-					formatter = d3.format("")
-					slider = d3.slider()
-					.min(1994)
-					.max(2014)
-					.ticks(20)
-					.tickFormat(function(d){ return formatter(d) })
-					.stepValues(years)
-					.callback(function(evt){ update_datapoints([slider.value()], country_data)});
+			//initializes the slider
+			formatter = d3.format("")
+			slider = d3.slider()
+				.min(1994)
+				.max(2014)
+				.ticks(20)
+				.tickFormat(function(d){ return formatter(d) })
+				.stepValues(years)
+				.callback(function(evt){ update_datapoints([slider.value()], country_data)});
 
-					var slide = d3.select('div.slider')
-					.call(slider);
-				}
-			}, 1000);
+			var slide = d3.select('div.slider')
+				.call(slider);
 
 		}
 		// Sets fill color in respect to the incident type
@@ -335,20 +387,23 @@ h3 {
 
 		//Adds zoom to bounding box feature
 		function clicked(d) {
-
+			//destroy existing slider
 			slider.destroy()
-
+			/*calls reset if the country clicked on matches the active node, and sets it to a different country
+			if it doesn't match the active node*/
 			if(active.node() === this) return reset();
 			if(active[0][0] !== null){
 				country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
 				active.attr('fill', set_fill_color(country_attack_type[country]));
 				svg.selectAll('circle.data_point').remove();
 			}
+			//Sets the active country
 			active.classed("active", false);
 			active = d3.select(this);
 			active.attr('class', d.properties.admin.replaceAll(' ', '_')).classed('active', true);
 			active.attr("fill", "#d3d3d3")
 			d3.select('h2').text('Terrorist Incidents in ' + d.properties.admin.replaceAll('_', ' '));
+			//sets the bounding box around the active country and then translates and scales to zoom
 			var bounds = path.bounds(d),
 			dx = bounds[1][0] - bounds[0][0],
 			dy = bounds[1][1] - bounds[0][1],
@@ -357,10 +412,11 @@ h3 {
 			scale = .9 / Math.max(dx / width, dy / height),
 			translate = [width / 2 - scale * x, height / 2 - scale * y]
 			g.transition()
-			.duration(100)
-			.style('stroke-width', 0.5 / scale + "px")
-			.attr("transform", "translate(" + translate + ")scale(" + scale + ")");
+			  .duration(100)
+			  .style('stroke-width', 0.5 / scale + "px")
+			  .attr("transform", "translate(" + translate + ")scale(" + scale + ")");
 
+			//plots the data points for the active country
 			d3.csv('global_terror_db_pruned.csv', function(d){
 				var date_format = d3.time.format("%d-%m-%Y");
 				date = date_format.parse(d['day'] + '-' +d['month'] + '-' + d['year'])
@@ -369,42 +425,43 @@ h3 {
 			}, plot_datapoints);
 
 		}
-
+		//resets to the original view
 		function reset() {
-
+			//destroy the slider and set active country to null
+			slider.destroy()
 			active.classed("active", false);
 			country = active.attr('class').split(' ')[0].replaceAll('_', ' ');
 			active.attr('fill', set_fill_color(country_attack_type[country]));
 			active = d3.select(null);
-
+			//remove all data point circles
 			svg.selectAll('circle.data_point').remove();
 
 			g.transition()
-			.duration(500)
-			.style("stroke-width", ".5px")
-			.attr("transform", "");
-
+			  .duration(500)
+			  .style("stroke-width", ".5px")
+			  .attr("transform", "");
+			//set the h2 and h3 to the default condition
 			d3.select('h2').text('Most Common Terrorist Attack Types')
 			d3.select('h3').text("Click on a country for a closer look")
-
+			//set up array of years for slider
 			var years = []
 			for (i = 1994; i < 2015; i++){
 				years.push(i)
 			}
+			//initialize the slider
 			formatter = d3.format("")
-
 			slider = d3.slider()
-			.min(1994)
-			.max(2014)
-			.ticks(20)
-			.tickFormat(function(d){ return formatter(d) })
-			.stepValues(years)
-			.callback(function(evt){ update_datapoints([1994, slider.value()], data)});
+			  .min(1994)
+			  .max(2014)
+			  .ticks(20)
+			  .tickFormat(function(d){ return formatter(d) })
+			  .stepValues(years)
+			  .callback(function(evt){ update_map([1994, slider.value()], Global_data)});
 
 			var slide = d3.select('div.slider')
-			.call(slider);
+			  .call(slider);
 		}
-
+		//adds mousewheel zoom function
 		function zoomed(){
 			g.style("'stroke-width", .5 / d3.event.scale + "px");
 			g.attr('transform', 'translate(' +d3.event.translate + ')scale(' +d3.event.scale + ')');
