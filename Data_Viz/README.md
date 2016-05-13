@@ -7,6 +7,24 @@ I pared down the data set to remove incidents with a month or day value of 0,
 I removed a fair number of the collumns that I would not be using, in order to 
 make the size of the file more managable. 
 
+## Initial Design Decisions
+
+### Narrative
+In my initial exploration of this dataset I was struck by the likley correlation between geographical area and attack type.
+I used this project to explore that correlation as well as to follow the evolution of terrorist activity over the last few decades.
+On a smaller scale I also wanted to show the distribution of terrorist attacks within a country's geography as well.
+
+### Design
+I decided to plot the most common incident types by county on a map, in order to show what I felt would be a strong correlation
+between where a country is in the world and what sort of terrorist attacks are prevalent. I decided to plot the change over time,
+because I noticed in my initial exploration of the data that there has been an evolution away from what I would consider more personal
+forms of Terrorism (Kidnappings, Assassinations, Armed Assaults on Facilities) in favour of less personal attacks (bombings). 
+I then decided that it would also be interesting to plot each incident within the country that it occurred in. I thought that this
+further show the correlation between geographical location, as well as provide an interesting way to look at the change in attacks
+over time. I was hoping to show that there was an increase over time, subsequently I have found that the countries which the trend
+is most obvious in are over plotted to begin with, and that the change over time doesn't show well. Initially I animated the change
+over time, after selecting a country, thinking that it would provide an interesting way to explore the data. 
+
 ## Feedback:
 
 ### D Wood:
@@ -31,7 +49,7 @@ make the size of the file more managable.
 ###Project Reviewer
 * Animating from the start is confusing (added a start button)
 * Animating the data points being added to the country 
-makes it difficult to tell what it going on
+makes it difficult to tell what it going on 
 * Use Markdown in Readme (done)
 * Comment certain code blocks (done)
 * Formatting changes for code (done)
