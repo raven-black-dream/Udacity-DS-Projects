@@ -3,4 +3,14 @@ Resources used:
 I drew the structure of my report from the example report given at the below link
 https://www.udacity.com/wiki/ud120/finalproject
 
+I was given a clue on how to tackle the TF-Idf feature problem by the below forum discussion:
+https://discussions.udacity.com/t/final-project-text-learning/28169
+
+I found more about the use of the TF-IDF vectorizer in the blog post below:
+http://www.markhneedham.com/blog/2015/02/15/pythonscikit-learn-calculating-tfidf-on-how-i-met-your-mother-transcripts/
+
 Other than that I made extensive use of  the sklearn documentation.
+http://scikit-learn.org/stable/auto_examples/model_selection/grid_search_digits.html#example-model-selection-grid-search-digits-py
+http://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html
+http://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier.html
+http://scikit-learn.org/stable/tutorial/text_analytics/working_with_text_data.html
