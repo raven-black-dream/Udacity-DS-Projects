@@ -9,7 +9,7 @@ from tester import test_classifier, dump_classifier_and_data
 from feature_format import featureFormat, targetFeatureSplit
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import SelectPercentile
-from sklearn.ensemble import AdaBoostClassifier
+from sklearn.svm import SVC
 from sklearn.pipeline import make_pipeline
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.tree import DecisionTreeClassifier
@@ -99,11 +99,14 @@ for name in tfidf_dict:
 
 data = featureFormat(tfidf_dict, list_of_features)
 labels, features = targetFeatureSplit(data)
-# first percentile 10% doesn't seem to help too much
-# selector = SelectPercentile(percentile = 10)
-# No significant change using 5%
-selector = SelectPercentile(percentile=1)
-# No significant change using 1% either
+selector = SelectKBest(k=50)
+# When selector was select k best - k = 50: Accuracy = 0.9082, Precision = 0.83676, Recall = 0.387
+# When selector was select percentile - percentile = 10: Acc =0.83733 , Pre = 0.24419 , Rec = 0.105
+# This is a significant decrease
+# When Selector was select precentile - percentile = 5: Acc =0.83773 , Pre = 0.21144 , Rec = 0.07950
+# This was another significant decrease
+
+
 selector.fit(features, labels)
 
 selected = selector.get_support()
@@ -149,18 +152,20 @@ labels, features = targetFeatureSplit(data)
 # Note that if you want to do PCA or other multi-stage operations,
 # you'll need to use Pipelines. For more info:
 # http://scikit-learn.org/stable/modules/pipeline.html
-
+'''
 pipeline = Pipeline([('scaling', MinMaxScaler()),
                      #('feature_selection', SelectKBest()),
                      ('pca', PCA()),
                      ('neighbours', KNeighborsClassifier())])
 parameters = {#'feature_selection__k': ['all', 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
               'pca__n_components': [None, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+              'pca__whiten': [True, False],
               'neighbours__n_neighbors': [1, 2, 3, 4, 5, 6, 7],
               'neighbours__algorithm': ['ball_tree', 'kd_tree', 'brute'],
               'neighbours__weights': ['uniform', 'distance'],
               'neighbours__leaf_size': [1, 2, 3, 7, 10, 20, 25, 30, 35]}
 # Using Grid Search to tune parameters.
+
 print ("Test 1:")
 gridsearch = GridSearchCV(pipeline, parameters, scoring='recall', cv=StratifiedShuffleSplit(labels))
 t0 = time()
@@ -171,36 +176,51 @@ best_parameters = gridsearch.best_estimator_.get_params()
 for param_name in sorted(parameters.keys()):
     print("\t%s: %r" % (param_name, best_parameters[param_name]))
 # applied the above parameters to the estimator for testing
-
-clf = make_pipeline(MinMaxScaler(), PCA(n_components=7),
-                    KNeighborsClassifier(algorithm='kd_tree', leaf_size=7, n_neighbors=1, weights='distance'))
+'''
+clf = make_pipeline(MinMaxScaler(), PCA(n_components=4, whiten=True),
+                    KNeighborsClassifier(algorithm='kd_tree', leaf_size=3, n_neighbors=1, weights='uniform'))
 
 test_classifier(clf, my_dataset, selected_features)
+# Accuracy = 0.91547, Precision = 0.76599, Recall = 0.527
 
-# print ("Test 11:")
-# clf = make_pipeline(MinMaxScaler(), PCA(n_components=3), KNeighborsClassifier(p=2, n_neighbors=3))
-# test_classifier(clf, my_dataset, features_list)
-# SelectPercentile = 1% Accuracy: 0.87713 Precision: 0.61166 Recall: 0.215
-# Best KNN Classifier
-
+print ("Test 2:")
+'''
 pipeline = Pipeline([('dt', DecisionTreeClassifier())])
-parameters = {'dt__criterion': ('gini', 'entropy'), 'dt__max_features': (0.05, 0.10, 0.12, 0.15),
+parameters = {'dt__criterion': ('gini', 'entropy'), 'dt__max_features': (0.05, 0.10, 0.15, 0.20, 'sqrt', 'log2'),
               'dt__min_samples_split': (1, 2, 3, 4, 5), 'dt__min_samples_leaf': (1, 2, 3, 4, 5),
               'dt__class_weight': (None, 'balanced'), 'dt__presort': (False, True)}
 
-
-print ("Test 14:")
-gridsearch = GridSearchCV(pipeline, parameters, scoring='recall')
+gridsearch = GridSearchCV(pipeline, parameters, cv=StratifiedShuffleSplit(labels))
 t0 = time()
 gridsearch.fit(np.array(features), np.array(labels))
 print("done in %0.3fs" % (time() - t0))
 best_parameters = gridsearch.best_estimator_.get_params()
+print gridsearch.best_score_
 for param_name in sorted(parameters.keys()):
    print("\t%s: %r" % (param_name, best_parameters[param_name]))
+'''
+clf2 = make_pipeline(DecisionTreeClassifier(class_weight=None, criterion='entropy', max_features=0.05,
+                                           min_samples_leaf=1, min_samples_split=5, presort=False))
+test_classifier(clf2, my_dataset, selected_features)
+# Accuracy = 0.8648, Precision = 0.48997, Recall = 0.342
+print ("Test 3:")
+'''
+pipeline = Pipeline([('Scaler', MinMaxScaler()), ('SVC', SVC())])
+parameters = {'SVC__kernel': ['rbf', 'linear', 'poly'], 'SVC__C': [1, 10, 100, 1000], 'SVC__max_iter': [-1, 5, 10, 15],
+               'SVC__degree': [2, 3, 4,]}
 
-clf = make_pipeline(DecisionTreeClassifier(class_weight='balanced', criterion='entropy', max_features=0.12,
-                                           min_samples_leaf=5, min_samples_split=2, presort=True))
-test_classifier(clf, my_dataset, selected_features)
+gridsearch = GridSearchCV(pipeline, parameters, cv=StratifiedShuffleSplit(labels))
+t0 = time()
+gridsearch.fit(np.array(features), np.array(labels))
+print("done in %0.3fs" % (time() - t0))
+best_parameters = gridsearch.best_estimator_.get_params()
+print gridsearch.best_score_
+for param_name in sorted(parameters.keys()):
+   print("\t%s: %r" % (param_name, best_parameters[param_name]))
+'''
+clf3 = make_pipeline(MinMaxScaler(), SVC(C=10, kernel='rbf', max_iter=15))
+test_classifier(clf3, my_dataset, selected_features)
+# Accuracy = 0.91333, Precision = 0.76718, Recall = 0.5025
 
 # Task 5: Tune your classifier to achieve better than .3 precision and recall
 # using our testing script.
@@ -213,4 +233,4 @@ test_classifier(clf, my_dataset, selected_features)
 # Dump your classifier, dataset, and features_list so
 # anyone can run/check your results.
 
-#dump_classifier_and_data(clf, my_dataset, features_list)
+dump_classifier_and_data(clf, my_dataset, features_list)
